@@ -21,7 +21,8 @@
 - Download and extract to folder dataset/
 - Remember to modify input channel of two models if you want to train model for Fuji subset. 
 
-## Link to pretrained model (will be updated)
+## Link to pretrained model: 
+[Link](https://drive.google.com/drive/folders/10fmRnTSTs0zIVYdpJPsyH6G6s11jrYDy?usp=sharing)
 
 ## Train
 ### 1. Single frame model
