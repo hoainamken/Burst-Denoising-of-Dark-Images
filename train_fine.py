@@ -19,8 +19,8 @@ import copy
 from tqdm import tqdm
 from torchsummary import summary
 
-from coarsenet import CoarseNet
-from finenet import FineNet
+from models.coarsenet import CoarseNet
+from models.finenet import FineNet
 import argparse
 import scipy
 import scipy.misc
@@ -38,8 +38,8 @@ except RuntimeError:
     pass
 
 writer = SummaryWriter("runs/finenet_coarse300")
-SONY_TRAIN_PATH = "dataset/Sony_train_list.txt"
-SONY_VAL_PATH = "dataset/Sony_val_list.txt"
+SONY_TRAIN_PATH = "dataset/Sony_train_list_trial.txt"
+SONY_VAL_PATH = "dataset/Sony_val_list_trial.txt"
 
 class SonyDataset(Dataset):
     def __init__(self, coarseNet, device, path="dataset/Sony_train_list.txt"):
@@ -90,7 +90,8 @@ class SonyDataset(Dataset):
         img = self.buildInput(img)
 
         preprocess_gt_path = self.gt_paths[idx].split('/')[-1].split('.')[0]
-        gt_img = cv2.imread('sony_gt/gt/' + preprocess_gt_path + '.png')
+        gt_img = cv2.imread('dataset/gt/' + preprocess_gt_path + '.png')
+        print(gt_img)
         gt_img = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
         gt_img = gt_img/255.
 
@@ -211,7 +212,7 @@ def main():
         
     # load Coarse Net model to create input for Fine Net 
     coarseModel = CoarseNet()
-    coarseModel.load_state_dict(torch.load('checkpoints_coarse/exp1_amp_ratio/coarse_e300.pth', map_location = 'cuda')) 
+    coarseModel.load_state_dict(torch.load(args.coarse, map_location = 'cuda')) 
     coarseModel.eval()
     
     fineModel = FineNet()

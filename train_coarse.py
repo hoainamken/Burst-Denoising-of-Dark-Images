@@ -17,14 +17,14 @@ import time
 from tqdm import tqdm
 from torchsummary import summary
 
-from coarsenet import CoarseNet
+from models.coarsenet import CoarseNet
 import argparse
 
 torch.manual_seed(777)
 np.random.seed(777)
 
-SONY_TRAIN_PATH = "dataset/Sony_train_list.txt"
-SONY_VAL_PATH = "dataset/Sony_val_list.txt"
+SONY_TRAIN_PATH = "dataset/Sony_train_list_trial.txt"
+SONY_VAL_PATH = "dataset/Sony_val_list_trial.txt"
 
 writer = SummaryWriter()
 
@@ -127,10 +127,9 @@ def validate(model, val_loader, criterion, device):
 
 def main():
     parser = argparse.ArgumentParser("Burst denoising of dark images")
-    parser.add_argument('cmd', type=str, choices=['train', 'test'], help='train or test')
     parser.add_argument('--epochs', type=int, default=4000, help='number of training epoch')
     parser.add_argument('--batch-size', type=int, default=64, help='batch size')
-    parser.add_argument('--optimizer', '-o', type=str, default='adam', choices=['adam', 'sgd'], help='optimizer')
+    parser.add_argument('--optimizer', '-o', type=str, default='adam', choices=['adam'], help='optimizer')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--save-freq', type=int, default=20, help='saving model frequency')
     parser.add_argument('--val-freq', type=int, default=1, help='validation frequency')
@@ -157,69 +156,69 @@ def main():
     sonyTrainDataset = SonyDataset(SONY_TRAIN_PATH)
     sonyValDataset = SonyDataset(SONY_VAL_PATH)
 
-    train_loader = DataLoader(sonyTrainDataset, args.batch_size, shuffle=True, num_workers=4)
+    train_loader = DataLoader(sonyTrainDataset, args.batch_size, shuffle=True)
     val_loader = DataLoader(sonyValDataset, args.batch_size)
 
-    if args.cmd == 'train':
-        model.train()
+    
+    model.train()
 
-        current_val_loss = 0.0
-        no_improve_cnt = 0
-        best_epoch = 0
+    current_val_loss = 0.0
+    no_improve_cnt = 0
+    best_epoch = 0
 
-        for epoch in range(args.epochs):
-            start_time = time.time()
+    for epoch in range(args.epochs):
+        start_time = time.time()
 
-            # no improvement in val loss in 50 epochs then stop training
-            if no_improve_cnt == 50:
-                print(
-                    f'no improvement in 50 epochs, best epoch {best_epoch}, best val loss: {current_val_loss.cpu().numpy()}')
-                torch.save(model.state_dict(), 'checkpoints/{}/coarse_e{}_val{}_best.pth'.format(args.experiment_name, best_epoch, np.round(
-                    current_val_loss.cpu().numpy(), 2)))
-                break
+        # no improvement in val loss in 50 epochs then stop training
+        if no_improve_cnt == 50:
+            print(
+                f'no improvement in 50 epochs, best epoch {best_epoch}, best val loss: {current_val_loss.cpu().numpy()}')
+            torch.save(model.state_dict(), 'checkpoints/{}/coarse_e{}_val{}_best.pth'.format(args.experiment_name, best_epoch, np.round(
+                current_val_loss.cpu().numpy(), 2)))
+            break
 
-            if (args.optimizer == 'adam') & (epoch == 2):
-                print("reduce learning rate to 0.00001")
-                print("")
-                optimizer = optim.Adam(model.parameters(), lr=0.00001)
+        if (args.optimizer == 'adam') & (epoch == 2):
+            print("reduce learning rate to 0.00001")
+            print("")
+            optimizer = optim.Adam(model.parameters(), lr=0.00001)
 
-            train_loss = train(model, train_loader, optimizer, criterion, epoch, args.save_freq, device)
+        train_loss = train(model, train_loader, optimizer, criterion, epoch, args.save_freq, device)
 
-            print(f'epoch: {epoch}, train loss: {train_loss}')
+        print(f'epoch: {epoch}, train loss: {train_loss}')
 
-            if epoch % args.val_freq == 0:
-                val_loss = validate(model, val_loader, criterion, device)
-                if (epoch == 0):
-                    current_val_loss = val_loss
+        if epoch % args.val_freq == 0:
+            val_loss = validate(model, val_loader, criterion, device)
+            if (epoch == 0):
+                current_val_loss = val_loss
 
-                print(f'epoch: {epoch}, val loss: {val_loss}')
-                if val_loss < current_val_loss:
-                    best_epoch = epoch
-                    current_val_loss = val_loss
+            print(f'epoch: {epoch}, val loss: {val_loss}')
+            if val_loss < current_val_loss:
+                best_epoch = epoch
+                current_val_loss = val_loss
 
-                    # save best model
-                    torch.save(model.state_dict(), 'checkpoints_coarse/{}/coarse_e{}.pth'.format(args.experiment_name, epoch))
-                    print(f'saved model at epoch {epoch} successuflly!')
-
-                    # reset variable when val loss show improvement
-                    no_improve_cnt = 0
-                else:
-                    no_improve_cnt += 1
-
-                writer.add_scalar('Loss/train', train_loss, epoch)
-                writer.add_scalar('Loss/val', val_loss, epoch)
-
-            time_per_epoch = time.time() - start_time
-            print(f'time per epoch: {time_per_epoch}')
-            print()
-
-            if epoch % args.save_freq == 0:
-                if not os.path.exists(f"checkpoints_coarse/{args.experiment_name}"):
-                    os.makedirs(f"checkpoints_coarse/{args.experiment_name}")
-
+                # save best model
                 torch.save(model.state_dict(), 'checkpoints_coarse/{}/coarse_e{}.pth'.format(args.experiment_name, epoch))
                 print(f'saved model at epoch {epoch} successuflly!')
-                print()
+
+                # reset variable when val loss show improvement
+                no_improve_cnt = 0
+            else:
+                no_improve_cnt += 1
+
+            writer.add_scalar('Loss/train', train_loss, epoch)
+            writer.add_scalar('Loss/val', val_loss, epoch)
+
+        time_per_epoch = time.time() - start_time
+        print(f'time per epoch: {time_per_epoch}')
+        print()
+
+        if epoch % args.save_freq == 0:
+            if not os.path.exists(f"checkpoints_coarse/{args.experiment_name}"):
+                os.makedirs(f"checkpoints_coarse/{args.experiment_name}")
+
+            torch.save(model.state_dict(), 'checkpoints_coarse/{}/coarse_e{}.pth'.format(args.experiment_name, epoch))
+            print(f'saved model at epoch {epoch} successuflly!')
+            print()
         writer.close()
 
 
