@@ -17,7 +17,7 @@
 
 ## Dataset (SID)
 - SID dataset contains two type of RAW images, one from Sony camera and another from Fuji camera, this repo uses Sony part of SID dataset for training the models. 
-- Link: [Sony](https://drive.google.com/open?id=1G6VruemZtpOyHjOC5N8Ww3ftVXOydSXx)(25GB), [Fuji](https://drive.google.com/open?id=1C7GeZ3Y23k1B8reRL79SqnZbRBc4uizH)(52GB)[1]
+- Link: [Sony](https://drive.google.com/open?id=1G6VruemZtpOyHjOC5N8Ww3ftVXOydSXx)(25GB), [Fuji](https://drive.google.com/open?id=1C7GeZ3Y23k1B8reRL79SqnZbRBc4uizH)(52GB) [2]
 - Download and extract to folder dataset/
 - Remember to modify input channel of two models if you want to train model for Fuji subset. 
 
@@ -54,7 +54,7 @@ check out notebook file: inference_sample.ipynb
 
 
 ## References: 
-- [1] Karadeniz, A.S., Erdem, E. and Erdem, A., 2020. Burst Denoising of Dark Images. arXiv preprint arXiv:2003.07823.
+- [1] Karadeniz, A.S., Erdem, E. and Erdem, A., 2020. Burst Denoising of Dark Images. arXiv preprint arXiv:2003.07823. https://arxiv.org/abs/2003.07823v1
 - [2] https://github.com/cchen156/Learning-to-See-in-the-Dark
 - [3] https://github.com/cydonia999/Learning_to_See_in_the_Dark_PyTorch
 
